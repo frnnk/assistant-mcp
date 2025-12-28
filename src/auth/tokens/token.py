@@ -20,3 +20,7 @@ class OAuthToken(ABC):
     @abstractmethod
     def refresh(self):
         pass
+
+    @abstractmethod
+    def set_token(self):
+        pass

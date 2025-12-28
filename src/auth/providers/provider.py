@@ -21,7 +21,7 @@ class OAuthProvider(ABC):
         self.token: Optional[OAuthToken] = None
         self.scopes: Optional[Sequence[str]] = None
     
-    def _set_access_token(self, token: OAuthToken) -> None:
+    def _set_token(self, token: OAuthToken) -> None:
         self.token = token
     
     # @abstractmethod
@@ -29,7 +29,7 @@ class OAuthProvider(ABC):
     #     return self.token.refresh()
 
     @abstractmethod
-    def _get_access_token(self, principal_id):
+    def _get_existing_token(self, principal_id):
         pass
 
     @abstractmethod

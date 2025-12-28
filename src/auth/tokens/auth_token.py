@@ -14,7 +14,11 @@ class OAuthToken(ABC):
     - Refresh token if possible
     """
     @abstractmethod
-    def check_not_expired(self):
+    def is_valid(self):
+        pass
+
+    @abstractmethod
+    def can_refresh(self):
         pass
 
     @abstractmethod
@@ -22,5 +26,5 @@ class OAuthToken(ABC):
         pass
 
     @abstractmethod
-    def set_token(self):
+    def set_creds(self):
         pass

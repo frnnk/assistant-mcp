@@ -5,7 +5,7 @@ and clients.
 
 from abc import ABC, abstractmethod
 from typing import Optional, Sequence
-from auth.tokens.token import OAuthToken
+from auth.tokens.auth_token import OAuthToken
 
 class OAuthProvider(ABC):
     """

@@ -2,11 +2,20 @@
 Provides implementations for Google OAuth providers. Serves as an abstraction layer to app logic.
 """
 
-from typing import Sequence
+import os
+import os.path
+from typing import Sequence, Union, Optional
 from provider import OAuthProvider, LocalRedirectWSGIApp
 from auth.tokens.google_token import GoogleToken
 from google_auth_oauthlib.flow import Flow
+from google.oauth2.credentials import Credentials
+from dotenv import load_dotenv
 import wsgiref.simple_server
+
+load_dotenv()
+SCOPES = ["https://www.googleapis.com/auth/calendar"]
+GOOGLE_SECRETS_PATH = os.getenv("GOOGLE_SECRETS_PATH")
+GOOGLE_LOCAL_TOKEN_PATH = os.getenv("GOOGLE_LOCAL_TOKEN_PATH")
 
 
 class LocalGoogleProvider(OAuthProvider):
@@ -18,12 +27,15 @@ class LocalGoogleProvider(OAuthProvider):
     """
     def __init__(self, flow: Flow):
         self.flow = flow
-        self.scopes = None
         self.local_server = None
         self.redirect_app = None
 
-    def _get_stored_token(self, principal_id):
-        pass
+    def _get_stored_token(self, principal_id, scopes) -> Optional[GoogleToken]:
+        if os.path.exists(GOOGLE_LOCAL_TOKEN_PATH):
+            creds = Credentials.from_authorized_user_file(GOOGLE_LOCAL_TOKEN_PATH, scopes)
+            return GoogleToken(creds)
+        
+        return None 
 
     def _generate_auth_url(
         self,  
@@ -54,9 +66,7 @@ class LocalGoogleProvider(OAuthProvider):
 
         auth_url = self._generate_auth_url(host=host, port=port, **auth_kwargs)
         print(auth_url)
-        print(self.flow.redirect_uri)
 
-        self.local_server.timeout = 300
         return auth_url
 
     def _end_local_auth(self):
@@ -68,8 +78,29 @@ class LocalGoogleProvider(OAuthProvider):
 
         return self.flow.credentials
 
-    def get_access_token(self, principal_id: str, scopes: Sequence[str]):
-        pass
+    def get_access_token(self, principal_id: str, scopes: Sequence[str]) -> GoogleToken:
+        token = self._get_stored_token(principal_id, scopes)
+        if token is not None and token.is_valid:
+            if not token.is_stale:
+                return token
+            if token.can_refresh:
+                token.refresh()
+                with open(GOOGLE_LOCAL_TOKEN_PATH, 'w') as new_token:
+                    new_token.write(token.creds.to_json())
+            
+                return token
+        
+        # start local auth
+        self._start_local_auth(host="127.0.0.1")
+        self.local_server.timeout = 300
+        self.local_server.handle_request()
+        creds = self._end_local_auth()
+
+        # save new fetched token
+        with open(GOOGLE_LOCAL_TOKEN_PATH, 'w') as new_token:
+            new_token.write(creds.to_json())
+        
+        return GoogleToken(creds)
 
 
 if __name__ == "__main__":

@@ -54,7 +54,7 @@ class LocalGoogleProvider(OAuthProvider):
 
         auth_url = self._generate_auth_url(host=host, port=port, **auth_kwargs)
         print(auth_url)
-        print(flow.redirect_uri)
+        print(self.flow.redirect_uri)
 
         self.local_server.timeout = 300
         return auth_url

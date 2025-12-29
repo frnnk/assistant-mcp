@@ -5,7 +5,7 @@ Provides implementations for Google OAuth providers. Serves as an abstraction la
 import os
 import os.path
 from typing import Sequence, Union, Optional
-from provider import OAuthProvider, LocalRedirectWSGIApp
+from auth.providers.provider import OAuthProvider, LocalRedirectWSGIApp
 from auth.tokens.google_token import GoogleToken
 from google_auth_oauthlib.flow import Flow
 from google.oauth2.credentials import Credentials
@@ -103,7 +103,16 @@ class LocalGoogleProvider(OAuthProvider):
         return GoogleToken(creds)
 
 
+def main():
+    flow = Flow.from_client_secrets_file(GOOGLE_SECRETS_PATH, SCOPES)
+    x = LocalGoogleProvider(flow)
+
+    new_token = x.get_access_token("s", SCOPES)
+    print(new_token.creds.token_state) 
+
+
 if __name__ == "__main__":
+    main()
     pass
 
 

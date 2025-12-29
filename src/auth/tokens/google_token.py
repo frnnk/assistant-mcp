@@ -2,7 +2,7 @@
 Docstring for auth.tokens.google_token
 """
 
-from auth_token import OAuthToken
+from .auth_token import OAuthToken
 from google.auth.credentials import TokenState
 from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request

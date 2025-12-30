@@ -36,5 +36,5 @@ class GoogleToken(OAuthToken):
     def set_creds(self, creds: Credentials):
         self.creds = creds
 
-    def present_auth(self) -> Credentials:
+    def present_creds(self) -> Credentials:
         return self.creds

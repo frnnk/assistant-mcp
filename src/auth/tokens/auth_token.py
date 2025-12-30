@@ -28,3 +28,7 @@ class OAuthToken(ABC):
     @abstractmethod
     def set_creds(self):
         pass
+
+    @abstractmethod
+    def present_creds(self):
+        pass

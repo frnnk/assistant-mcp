@@ -17,16 +17,16 @@ def tool_retry_factory(
 ):
     def decorator(fn):
         def wrapper(*args, **kwargs):
-            for cnt in range(retries):
+            for cnt in range(retries + 1):
                 try:
                     return fn(*args, **kwargs)
                 except retry_on as e:
-                    print(e)
+                    if cnt == retries:
+                        raise RuntimeError(f"{error_message}") from e
+
+                    print(f"retrying, ran into error: {e}")
                     duration = 2**cnt + randint(0, 100) / 100
                     time.sleep(duration)
-                    continue
-            
-            raise RuntimeError(f"{error_message}")
         
         return wrapper
     return decorator

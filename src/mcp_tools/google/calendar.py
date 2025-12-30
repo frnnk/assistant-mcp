@@ -29,7 +29,9 @@ class GoogleCalendarToolApp(OAuthToolApp):
         """
         pass
 
-    def create_event():
+    @tool_retry_factory(error_message="Google Calendar error (create_event)", retry_on=(HttpError,))
+    def create_event(name: str, start: datetime, end: datetime):
+
         pass
 
     def update_event():

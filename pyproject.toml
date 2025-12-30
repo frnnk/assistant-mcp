@@ -4,7 +4,8 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = [
-    "src/auth"
+    "src/auth",
+    "src/mcp_tools"
 ]
 
 [project]
@@ -26,4 +27,5 @@ dependencies = [
 
 [project.scripts]
 google-provider = "auth.providers.google_provider:main"
+google-cal = "mcp_tools.google.calendar:main"
 

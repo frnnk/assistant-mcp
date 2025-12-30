@@ -62,9 +62,9 @@ class LocalGoogleProvider(OAuthProvider):
         self.redirect_app = LocalRedirectWSGIApp()
         wsgiref.simple_server.WSGIServer.allow_reuse_address = False
         self.local_server = wsgiref.simple_server.make_server(host=host, port=port, app=self.redirect_app)
-        print(f"started local server @ https://{host}:{port}")
+        print(f"started local server @ https://{host}:{self.local_server.server_port}")
 
-        auth_url = self._generate_auth_url(host=host, port=port, **auth_kwargs)
+        auth_url = self._generate_auth_url(host=host, port=self.local_server.server_port, **auth_kwargs)
         print(auth_url)
 
         return auth_url
@@ -91,7 +91,7 @@ class LocalGoogleProvider(OAuthProvider):
                 return token
         
         # start local auth
-        self._start_local_auth(host="127.0.0.1")
+        self._start_local_auth(host="127.0.0.1", port=0)
         self.local_server.timeout = 300
         self.local_server.handle_request()
         creds = self._end_local_auth()
@@ -103,13 +103,16 @@ class LocalGoogleProvider(OAuthProvider):
         return GoogleToken(creds)
 
 
+def create_local_google_provider(scopes: Sequence[str]):
+    flow = Flow.from_client_secrets_file(GOOGLE_SECRETS_PATH, scopes=scopes)
+    provider = LocalGoogleProvider(flow)
+    
+    return provider
+
 def main():
-    flow = Flow.from_client_secrets_file(GOOGLE_SECRETS_PATH, SCOPES)
-    x = LocalGoogleProvider(flow)
-
-    new_token = x.get_access_token("s", SCOPES)
+    provider = create_local_google_provider(SCOPES)
+    new_token = provider.get_access_token("s", SCOPES)
     print(new_token.creds.token_state) 
-
 
 if __name__ == "__main__":
     main()

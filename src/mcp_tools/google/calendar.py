@@ -10,6 +10,7 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from auth.tokens.google_token import GoogleToken
 from auth.providers.google_provider import create_local_google_provider
+from utils.decorators import tool_retry_factory
 from mcp_tools.auth_tool_app import OAuthToolApp
 from gcsa.google_calendar import GoogleCalendar
 from gcsa.event import Event
@@ -34,6 +35,7 @@ class GoogleCalendarToolApp(OAuthToolApp):
     def update_event():
         pass
 
+    @tool_retry_factory(error_message="Google Calendar error (list_calendars)", retry_on=(HttpError,))
     def list_calendars(self) -> List[Dict[str, Any]]:
         """
         Lists calendars on the user's calendar list.
@@ -41,19 +43,16 @@ class GoogleCalendarToolApp(OAuthToolApp):
         auth_token = self.get_auth_token("localtest")
         creds = auth_token.present_creds()
 
-        try:
-            gc = GoogleCalendar(credentials=creds)
-            calendar_list = []
-            for calendar in gc.get_calendar_list():
-                calendar_dict = {}
-                calendar_dict['name'] = calendar.summary
-                calendar_dict['desciption'] = calendar.description or 'n/a'
-                calendar_dict['calender_id'] = calendar.calendar_id
-                calendar_list.append(calendar_dict)
-            
-            return calendar_list
-        except Exception as e:
-            raise RuntimeError(f"Google Calendar API error (list_calendars): {e}") from e
+        gc = GoogleCalendar(credentials=creds)
+        calendar_list = []
+        for calendar in gc.get_calendar_list():
+            calendar_dict = {}
+            calendar_dict['name'] = calendar.summary
+            calendar_dict['desciption'] = calendar.description or 'n/a'
+            calendar_dict['calender_id'] = calendar.calendar_id
+            calendar_list.append(calendar_dict)
+        
+        return calendar_list
 
     def list_events(self, calendar_id, max_events=20):
         auth_token = self.get_auth_token("localtest")
@@ -84,6 +83,7 @@ class GoogleCalendarToolApp(OAuthToolApp):
 def main():
     provider = create_local_google_provider(SCOPES)
     cal = GoogleCalendarToolApp(provider=provider, scopes=SCOPES)
-    x = cal.list_events(calendar_id="en.usa#holiday@group.v.calendar.google.com")
+    x = cal.list_calendars()
+    # x = cal.list_events(calendar_id="en.usa#holiday@group.v.calendar.google.com")
     print(json.dumps(x, indent=4))
     pass

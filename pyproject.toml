@@ -5,7 +5,8 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = [
     "src/auth",
-    "src/mcp_tools"
+    "src/mcp_tools",
+    "src/utils"
 ]
 
 [project]

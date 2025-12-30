@@ -4,12 +4,15 @@ Makes use of the Google OAuth token, found in auth.tokens.google_token
 """
 
 import datetime
+import json
 from typing import List, Dict, Any, Iterable, Literal
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from auth.tokens.google_token import GoogleToken
-from auth.providers.google_provider import LocalGoogleProvider, create_local_google_provider
+from auth.providers.google_provider import create_local_google_provider
 from mcp_tools.auth_tool_app import OAuthToolApp
+from gcsa.google_calendar import GoogleCalendar
+from gcsa.event import Event
 
 SCOPES = ["https://www.googleapis.com/auth/calendar"]
 
@@ -31,99 +34,56 @@ class GoogleCalendarToolApp(OAuthToolApp):
     def update_event():
         pass
 
-    def list_calendars(self, max_results: int = 250) -> List[Dict[str, Any]]:
+    def list_calendars(self) -> List[Dict[str, Any]]:
         """
-        Lists calendars on the user's calendar list via calendarList.list. :contentReference[oaicite:4]{index=4}
+        Lists calendars on the user's calendar list.
         """
-        auth_token = self.get_auth_token("any")
+        auth_token = self.get_auth_token("localtest")
         creds = auth_token.present_creds()
-        service = self.create_service(creds=creds)
-        out: List[Dict[str, Any]] = []
-        page_token = None
 
         try:
-            while True:
-                resp = (
-                    service.calendarList()
-                    .list(maxResults=max_results, pageToken=page_token)
-                    .execute()
-                )
-                out.extend(resp.get("items", []))
-                page_token = resp.get("nextPageToken")
-                if not page_token:
-                    break
-            return out
-        except HttpError as e:
+            gc = GoogleCalendar(credentials=creds)
+            calendar_list = []
+            for calendar in gc.get_calendar_list():
+                calendar_dict = {}
+                calendar_dict['name'] = calendar.summary
+                calendar_dict['desciption'] = calendar.description or 'n/a'
+                calendar_dict['calender_id'] = calendar.calendar_id
+                calendar_list.append(calendar_dict)
+            
+            return calendar_list
+        except Exception as e:
             raise RuntimeError(f"Google Calendar API error (list_calendars): {e}") from e
 
-    def list_events():
-        pass
+    def list_events(self, calendar_id, max_events=20):
+        auth_token = self.get_auth_token("localtest")
+        creds = auth_token.present_creds()
+
+        try:
+            count = 0
+            gc = GoogleCalendar(credentials=creds, default_calendar=calendar_id)
+            events_list = []
+            for event in gc:
+                if count > max_events:
+                    break
+
+                event_dict = {}
+                event_dict['name'] = event.summary
+                event_dict['start'] = str(event.start)
+                event_dict['end'] = str(event.end)
+                event_dict['desciption'] = event.description or 'n/a'
+                event_dict['event_id'] = event.event_id or 'n/a'
+                events_list.append(event_dict)
+                count += 1
+            
+            return events_list
+        except Exception as e:
+            raise RuntimeError(f"Google Calendar API error (list_events): {e}") from e
 
 
 def main():
     provider = create_local_google_provider(SCOPES)
-    # new_token = provider.get_access_token("s", SCOPES)
-    # print(new_token.creds.token_state) 
     cal = GoogleCalendarToolApp(provider=provider, scopes=SCOPES)
-    x = cal.list_calendars(20)
-
-    AccessMode = Literal["read", "write"]
-
-    def has_write_access(entry: Dict[str, Any]) -> bool:
-        # Google Calendar accessRole values include: owner, writer, reader, freeBusyReader. 
-        return entry.get("accessRole") in {"owner", "writer"}
-
-
-    def has_read_access(entry: Dict[str, Any]) -> bool:
-        return entry.get("accessRole") in {"owner", "writer", "reader", "freeBusyReader"}
-
-
-    def print_calendars(
-        calendars: Iterable[Dict[str, Any]],
-        mode = "read",
-        include_missing_description: bool = False,
-    ) -> None:
-        """
-        Print calendars as:
-        - Summary (ID)
-            Description: ...
-
-        mode:
-        - "read": includes owner/writer/reader/freeBusyReader
-        - "write": includes owner/writer only
-        """
-        if mode not in ("read", "write"):
-            raise ValueError("mode must be 'read' or 'write'")
-
-        allowed = has_read_access if mode == "read" else has_write_access
-
-        printed_any = False
-        for cal in calendars:
-            if not allowed(cal):
-                continue
-
-            summary = cal.get("summary") or "<no summary>"
-            cal_id = cal.get("id") or "<no id>"
-            desc = (cal.get("description") or "").strip()
-
-            if not desc and not include_missing_description:
-                continue
-
-            printed_any = True
-            print(f"- {summary} ({cal_id})")
-            if desc:
-                print(f"  Description: {desc}")
-            else:
-                print("  Description: <none>")
-            print(f"  Access: {cal.get('accessRole', '<unknown>')}")
-            print()
-
-        if not printed_any:
-            print(f"(No calendars matched mode={mode!r} and description filter.)")
-    
-    print("Calendars with edit permissions\n")
-    print_calendars(x, mode="write", include_missing_description=True)
-    print()
-    print("Calendars with read permissions\n")
-    print_calendars(x, mode="read", include_missing_description=True)
+    x = cal.list_events(calendar_id="en.usa#holiday@group.v.calendar.google.com")
+    print(json.dumps(x, indent=4))
     pass

@@ -4,7 +4,7 @@ Construction of useful decorators and closures.
 
 import time
 import asyncio
-from typing import Tuple, Type
+from typing import Tuple, Type, Sequence
 from random import randint
 
 # decorators
@@ -30,25 +30,12 @@ def tool_retry_factory(
         return wrapper
     return decorator
 
-def async_tool_retry_factory(
-    error_message: str, 
-    retry_on: Tuple[Type[Exception]] = (Exception,), 
-    retries=3,
+
+def tool_scope_factory(
+    scopes: Sequence[str]
 ):
     def decorator(fn):
-        async def wrapper(*args, **kwargs):
-            for cnt in range(retries):
-                try:
-                    result = await fn(*args, **kwargs)
-                    return result
-                except retry_on as e:
-                    print(e)
-                    duration = 2**cnt + randint(0, 100) / 100
-                    await asyncio.sleep(duration)
-                    continue
-            
-            raise RuntimeError(f"{error_message}")
-        
-        return wrapper
+        fn.__scopes__ = scopes
+        return fn
     return decorator
 

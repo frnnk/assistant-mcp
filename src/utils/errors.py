@@ -10,3 +10,6 @@ class OAuthRequiredError(RuntimeError):
 
 class MethodNotFoundError(RuntimeError):
     pass
+
+class ScopesNotFoundError(RuntimeError):
+    pass

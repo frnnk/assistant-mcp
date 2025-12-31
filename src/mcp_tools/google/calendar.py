@@ -19,23 +19,13 @@ SCOPES = ["https://www.googleapis.com/auth/calendar"]
 
 
 class GoogleCalendarToolApp(OAuthToolApp):
-    def create_service(self, creds):
-        service = build('calendar', 'v3', credentials=creds)
-        return service
-
-    def get_availability():
-        """
-        Get free times on a calendar
-        """
-        pass
-
     @tool_scope_factory(scopes=SCOPES)
     @tool_retry_factory(error_message="Google Calendar error (create_event)", retry_on=(HttpError,))
     def create_event(
         self, *,
-        calendar_id: str,
         token: OAuthToken,
         ctx: Dict[str, Any], 
+        calendar_id: str,
         name: str, 
         start: datetime, 
         duration: Optional[timedelta],
@@ -56,13 +46,41 @@ class GoogleCalendarToolApp(OAuthToolApp):
         )
         event = gc.add_event(event=event)
 
-        return event
+        return {
+            "event_details": str(event),
+            "id": event.id
+        }
 
 
     @tool_scope_factory(scopes=SCOPES)
-    @tool_retry_factory(error_message="Google Calendar error (list_calendars)", retry_on=(HttpError,))
-    def update_event():
-        pass
+    @tool_retry_factory(error_message="Google Calendar error (update_event)", retry_on=(HttpError,))
+    def update_event(
+        self, *,
+        token: OAuthToken,
+        ctx: Dict[str, Any], 
+        calendar_id: str,
+        event_id: str,
+        name: str, 
+        start: datetime, 
+        duration: Optional[timedelta],
+        location: Optional[str],
+        description: Optional[str]
+    ):
+        creds = token.present_creds()
+        gc = GoogleCalendar(credentials=creds, default_calendar=calendar_id)
+        event = gc.get_event(event_id=event_id, calendar_id=calendar_id)
+        
+        event.summary=name
+        event.start=start
+        event.end=start + duration
+        event.location=location
+        event.description=description
+        event = gc.update_event(event=event)
+
+        return {
+            "event_details": str(event),
+            "id": event.id
+        }
 
 
     @tool_scope_factory(scopes=SCOPES)
@@ -122,19 +140,32 @@ def main():
     # x = cal.run_method(
     #     method_name='list_events',
     #     ctx={},
-    #     calendar_id="en.usa#holiday@group.v.calendar.google.com"
+    #     calendar_id="ffliu926@gmail.com"
     # )
-    x = cal.run_method(
-        method_name="create_event",
-        calendar_id="ffliu926@gmail.com",
-        ctx={},
-        name="testing event",
-        start=datetime(2026, 1, 2, hour=9),
-        duration=timedelta(minutes=45),
-        location="my house",
-        description="this is a testing attempt to create an event"
-    )
-    print(x)
 
-    # print(json.dumps(x, indent=4))
+    # x = cal.run_method(
+    #     method_name="create_event",
+    #     calendar_id="ffliu926@gmail.com",
+    #     ctx={},
+    #     name="testing event",
+    #     start=datetime(2026, 1, 2, hour=9),
+    #     duration=timedelta(minutes=45),
+    #     location="my house",
+    #     description="this is a testing attempt to create an event"
+    # )
+
+    x = cal.run_method(
+        method_name="update_event",
+        calendar_id="ffliu926@gmail.com",
+        event_id="7h9u8otn3i8kt3kqjmm19hocho",
+        ctx={},
+        name="testing event update",
+        start=datetime(2026, 1, 2, hour=12),
+        duration=timedelta(minutes=30),
+        location="my room",
+        description="this is a testing attempt to update an event"
+    )
+    # print(x)
+
+    print(json.dumps(x, indent=4))
     pass

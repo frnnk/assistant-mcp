@@ -9,6 +9,7 @@ from abc import ABC
 from typing import Sequence, Dict, Any
 from auth.providers.provider import OAuthProvider
 from auth.tokens.auth_token import OAuthToken
+from auth.oauth_gate import ensure_auth
 from utils.errors import MethodNotFoundError
 
 class OAuthToolApp(ABC):
@@ -29,14 +30,18 @@ class OAuthToolApp(ABC):
         if method is None:
             raise MethodNotFoundError
         
-        principal_id = ctx.get("principal_id", "localtest")
-        token = self.provider.get_access_token(principal_id, self.scopes)
-        if token is not None:
-            kwargs['token'] = token
-            return method(ctx=ctx, **kwargs)
-
-        # otherwise start auth process and finish
-        self.provider.start_auth(self.scopes)
+        # pass to oauth gateway
+        result = ensure_auth(
+            provider=self.provider,
+            method=method,
+            ctx=ctx,
+            scopes=self.scopes,
+            **kwargs
+        )
+        
+        return result
+        
+        
 
 
 

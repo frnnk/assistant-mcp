@@ -59,7 +59,7 @@ class LocalGoogleProvider(OAuthProvider):
         host="localhost", 
         port=8080,
         **auth_kwargs
-    ):
+    ) -> str:
         self.redirect_app = LocalRedirectWSGIApp()
         wsgiref.simple_server.WSGIServer.allow_reuse_address = False
         self.local_server = wsgiref.simple_server.make_server(host=host, port=port, app=self.redirect_app)
@@ -98,7 +98,7 @@ class LocalGoogleProvider(OAuthProvider):
 
     def start_auth(self, scopes):
         # start local auth
-        self._start_local_auth(host="127.0.0.1", port=0)
+        auth_url = self._start_local_auth(host="127.0.0.1", port=0)
         self.local_server.timeout = 300
         self.local_server.handle_request()
         creds = self._end_local_auth()
@@ -108,7 +108,10 @@ class LocalGoogleProvider(OAuthProvider):
             new_token.write(creds.to_json())
         print(creds.token_state)
         
-        raise OAuthRequiredError
+        raise OAuthRequiredError(
+            message="Please authenticate with the give authorization link",
+            auth_url=auth_url
+        )
 
 
 def create_local_google_provider(scopes: Sequence[str]):

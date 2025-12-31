@@ -110,17 +110,17 @@ class GoogleCalendarToolApp(OAuthToolApp):
         token: OAuthToken, 
         ctx: Dict[str, Any], 
         calendar_id: str, 
-        max_events=20
+        start_time: datetime,
+        duration: timedelta
     ):
         creds = token.present_creds()
         gc = GoogleCalendar(credentials=creds, default_calendar=calendar_id)
+        events = list(gc.get_events(
+            start_time, start_time+duration, single_events=True, order_by='startTime')
+        )
         
-        count = 0
         events_list = []
-        for event in gc:
-            if count > max_events:
-                break
-
+        for event in events:
             event_dict = {}
             event_dict['name'] = event.summary
             event_dict['start'] = str(event.start)
@@ -128,7 +128,6 @@ class GoogleCalendarToolApp(OAuthToolApp):
             event_dict['desciption'] = event.description or 'n/a'
             event_dict['event_id'] = event.event_id or 'n/a'
             events_list.append(event_dict)
-            count += 1
         
         return events_list
 
@@ -137,11 +136,13 @@ def main():
     provider = create_local_google_provider(SCOPES)
     cal = GoogleCalendarToolApp(provider=provider)
     # x = cal.run_method('list_calendars', ctx={})
-    # x = cal.run_method(
-    #     method_name='list_events',
-    #     ctx={},
-    #     calendar_id="ffliu926@gmail.com"
-    # )
+    x = cal.run_method(
+        method_name='list_events',
+        ctx={},
+        calendar_id="mitzbtofficial@gmail.com",
+        start_time=datetime(2025, 8, 1),
+        duration=timedelta(days=30)
+    )
 
     # x = cal.run_method(
     #     method_name="create_event",
@@ -154,17 +155,17 @@ def main():
     #     description="this is a testing attempt to create an event"
     # )
 
-    x = cal.run_method(
-        method_name="update_event",
-        calendar_id="ffliu926@gmail.com",
-        event_id="7h9u8otn3i8kt3kqjmm19hocho",
-        ctx={},
-        name="testing event update",
-        start=datetime(2026, 1, 2, hour=12),
-        duration=timedelta(minutes=30),
-        location="my room",
-        description="this is a testing attempt to update an event"
-    )
+    # x = cal.run_method(
+    #     method_name="update_event",
+    #     calendar_id="ffliu926@gmail.com",
+    #     event_id="7h9u8otn3i8kt3kqjmm19hocho",
+    #     ctx={},
+    #     name="testing event update",
+    #     start=datetime(2026, 1, 2, hour=12),
+    #     duration=timedelta(minutes=30),
+    #     location="my room",
+    #     description="this is a testing attempt to update an event"
+    # )
     # print(x)
 
     print(json.dumps(x, indent=4))

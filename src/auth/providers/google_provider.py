@@ -7,6 +7,7 @@ import os.path
 from typing import Sequence, Union, Optional
 from auth.providers.provider import OAuthProvider, LocalRedirectWSGIApp
 from auth.tokens.google_token import GoogleToken
+from utils.errors import OAuthRequiredError
 from google_auth_oauthlib.flow import Flow
 from google.oauth2.credentials import Credentials
 from dotenv import load_dotenv
@@ -78,7 +79,10 @@ class LocalGoogleProvider(OAuthProvider):
 
         return self.flow.credentials
 
-    def get_access_token(self, principal_id: str, scopes: Sequence[str]) -> GoogleToken:
+    def get_access_token(self, principal_id: str, scopes: Sequence[str]) -> Optional[GoogleToken]:
+        """
+        Get valid token or return None.
+        """
         token = self._get_stored_token(principal_id, scopes)
         if token is not None and token.is_valid:
             if not token.is_stale:
@@ -90,6 +94,9 @@ class LocalGoogleProvider(OAuthProvider):
             
                 return token
         
+        return None
+
+    def start_auth(self, scopes):
         # start local auth
         self._start_local_auth(host="127.0.0.1", port=0)
         self.local_server.timeout = 300
@@ -99,8 +106,9 @@ class LocalGoogleProvider(OAuthProvider):
         # save new fetched token
         with open(GOOGLE_LOCAL_TOKEN_PATH, 'w') as new_token:
             new_token.write(creds.to_json())
+        print(creds.token_state)
         
-        return GoogleToken(creds)
+        raise OAuthRequiredError
 
 
 def create_local_google_provider(scopes: Sequence[str]):

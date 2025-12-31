@@ -25,10 +25,6 @@ class OAuthProvider(ABC):
     def _set_token(self, token: OAuthToken) -> None:
         self.token = token
     
-    # @abstractmethod
-    # def _refresh_access_token(self) -> bool:
-    #     return self.token.refresh()
-
     @abstractmethod
     def _get_stored_token(self, principal_id):
         pass
@@ -39,6 +35,10 @@ class OAuthProvider(ABC):
 
     @abstractmethod
     def get_access_token(self, principal_id: str, scopes: Sequence[str]):
+        pass
+
+    @abstractmethod
+    def start_auth(self, scopes: Sequence[str]):
         pass
 
 

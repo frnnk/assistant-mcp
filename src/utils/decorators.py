@@ -6,7 +6,6 @@ import time
 import asyncio
 from typing import Tuple, Type
 from random import randint
-from utils.errors import OAuthError
 
 # decorators
 
@@ -53,4 +52,3 @@ def async_tool_retry_factory(
         return wrapper
     return decorator
 
-# closures

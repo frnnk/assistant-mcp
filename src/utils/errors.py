@@ -2,5 +2,8 @@
 Construction of custom errors.
 """
 
-class OAuthError(RuntimeError):
+class OAuthRequiredError(RuntimeError):
+    pass
+
+class MethodNotFoundError(RuntimeError):
     pass

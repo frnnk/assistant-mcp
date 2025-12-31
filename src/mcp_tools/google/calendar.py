@@ -3,17 +3,17 @@ Provides a class for interfacing with the Google Calendar API. Come with a set o
 Makes use of the Google OAuth token, found in auth.tokens.google_token
 """
 
-import datetime
 import json
-from typing import List, Dict, Any, Iterable, Literal
+from typing import Optional, List, Dict, Any, Iterable, Literal
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-from auth.tokens.google_token import GoogleToken
+from auth.tokens.auth_token import OAuthToken
 from auth.providers.google_provider import create_local_google_provider
 from utils.decorators import tool_retry_factory
 from mcp_tools.auth_tool_app import OAuthToolApp
 from gcsa.google_calendar import GoogleCalendar
 from gcsa.event import Event
+from datetime import datetime
 
 SCOPES = ["https://www.googleapis.com/auth/calendar"]
 
@@ -30,20 +30,28 @@ class GoogleCalendarToolApp(OAuthToolApp):
         pass
 
     @tool_retry_factory(error_message="Google Calendar error (create_event)", retry_on=(HttpError,))
-    def create_event(name: str, start: datetime, end: datetime):
-
+    def create_event(
+        calendar_id: str,
+        name: str, 
+        start: datetime, 
+        end: Optional[datetime],
+        location: Optional[str],
+        description: Optional[str]
+    ):
+        """
+        Docstring for create_event
+        """
         pass
 
     def update_event():
         pass
 
     @tool_retry_factory(error_message="Google Calendar error (list_calendars)", retry_on=(HttpError,))
-    def list_calendars(self) -> List[Dict[str, Any]]:
+    def list_calendars(self, *, token: OAuthToken, ctx: Dict[str, Any]) -> List[Dict[str, Any]]:
         """
         Lists calendars on the user's calendar list.
         """
-        auth_token = self.get_auth_token("localtest")
-        creds = auth_token.present_creds()
+        creds = token.present_creds()
 
         gc = GoogleCalendar(credentials=creds)
         calendar_list = []
@@ -85,7 +93,7 @@ class GoogleCalendarToolApp(OAuthToolApp):
 def main():
     provider = create_local_google_provider(SCOPES)
     cal = GoogleCalendarToolApp(provider=provider, scopes=SCOPES)
-    x = cal.list_calendars()
+    x = cal.run_method('list_calendars', ctx={})
     # x = cal.list_events(calendar_id="en.usa#holiday@group.v.calendar.google.com")
     print(json.dumps(x, indent=4))
     pass

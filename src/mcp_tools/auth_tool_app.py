@@ -6,10 +6,10 @@ OAuth tokens use the generic interface OAuthToken, found in auth.tokens.auth_tok
 """
 
 from abc import ABC
-from typing import Sequence
+from typing import Sequence, Dict, Any
 from auth.providers.provider import OAuthProvider
 from auth.tokens.auth_token import OAuthToken
-
+from utils.errors import MethodNotFoundError
 
 class OAuthToolApp(ABC):
     """
@@ -21,20 +21,22 @@ class OAuthToolApp(ABC):
     
     def get_auth_token(self, principal_id) -> OAuthToken:
         return self.provider.get_access_token(principal_id, scopes=self.scopes)
-    
-    def start_auth_process(self):
-        pass
-    
-    """
-    Need to break oauth provider into:
-        - can get access token: return it if possible otherwise say you can't
-        - if we cant, make auth link, spin up server, and then return link
-        have server on standby async
-        - once server receives end user authentication, fetch the token async
-        - so an implementation tool app:
-            - cannot get auth token,
-            - instead startup auth process and return the auth url
-            - server will be on standby
-    """
+
+    def run_method(self, method_name: str, *, ctx: Dict[str, Any], **kwargs):
+        method = getattr(self, method_name, None)
+        # implement individual scoping here, use decorators to add scopes
+        # scopes = getattr(method, ...)
+        if method is None:
+            raise MethodNotFoundError
+        
+        principal_id = ctx.get("principal_id", "localtest")
+        token = self.provider.get_access_token(principal_id, self.scopes)
+        if token is not None:
+            kwargs['token'] = token
+            return method(ctx=ctx, **kwargs)
+
+        # otherwise start auth process and finish
+        self.provider.start_auth(self.scopes)
+
 
 

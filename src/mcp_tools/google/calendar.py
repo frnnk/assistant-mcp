@@ -13,7 +13,7 @@ from utils.decorators import tool_retry_factory, tool_scope_factory
 from mcp_tools.auth_tool_app import OAuthToolApp
 from gcsa.google_calendar import GoogleCalendar
 from gcsa.event import Event
-from datetime import datetime
+from datetime import datetime, timedelta
 
 SCOPES = ["https://www.googleapis.com/auth/calendar"]
 
@@ -29,22 +29,41 @@ class GoogleCalendarToolApp(OAuthToolApp):
         """
         pass
 
+    @tool_scope_factory(scopes=SCOPES)
     @tool_retry_factory(error_message="Google Calendar error (create_event)", retry_on=(HttpError,))
     def create_event(
+        self, *,
         calendar_id: str,
+        token: OAuthToken,
+        ctx: Dict[str, Any], 
         name: str, 
         start: datetime, 
-        end: Optional[datetime],
+        duration: Optional[timedelta],
         location: Optional[str],
         description: Optional[str]
     ):
         """
         Docstring for create_event
         """
-        pass
+        creds = token.present_creds()
+        gc = GoogleCalendar(credentials=creds, default_calendar=calendar_id)
+        event = Event(
+            summary=name,
+            start=start,
+            end=start + duration,
+            location=location,
+            description=description
+        )
+        event = gc.add_event(event=event)
 
+        return event
+
+
+    @tool_scope_factory(scopes=SCOPES)
+    @tool_retry_factory(error_message="Google Calendar error (list_calendars)", retry_on=(HttpError,))
     def update_event():
         pass
+
 
     @tool_scope_factory(scopes=SCOPES)
     @tool_retry_factory(error_message="Google Calendar error (list_calendars)", retry_on=(HttpError,))
@@ -64,6 +83,7 @@ class GoogleCalendarToolApp(OAuthToolApp):
             calendar_list.append(calendar_dict)
         
         return calendar_list
+
 
     @tool_scope_factory(scopes=SCOPES)
     @tool_retry_factory(error_message="Google Calendar error (list_events)", retry_on=(HttpError,))
@@ -99,10 +119,22 @@ def main():
     provider = create_local_google_provider(SCOPES)
     cal = GoogleCalendarToolApp(provider=provider)
     # x = cal.run_method('list_calendars', ctx={})
+    # x = cal.run_method(
+    #     method_name='list_events',
+    #     ctx={},
+    #     calendar_id="en.usa#holiday@group.v.calendar.google.com"
+    # )
     x = cal.run_method(
-        method_name='list_events',
+        method_name="create_event",
+        calendar_id="ffliu926@gmail.com",
         ctx={},
-        calendar_id="en.usa#holiday@group.v.calendar.google.com"
+        name="testing event",
+        start=datetime(2026, 1, 2, hour=9),
+        duration=timedelta(minutes=45),
+        location="my house",
+        description="this is a testing attempt to create an event"
     )
-    print(json.dumps(x, indent=4))
+    print(x)
+
+    # print(json.dumps(x, indent=4))
     pass

@@ -18,7 +18,6 @@ SCOPES = ["https://www.googleapis.com/auth/calendar"]
 GOOGLE_SECRETS_PATH = os.getenv("GOOGLE_SECRETS_PATH")
 GOOGLE_LOCAL_TOKEN_PATH = os.getenv("GOOGLE_LOCAL_TOKEN_PATH")
 
-
 class LocalGoogleProvider(OAuthProvider):
     """
     Google-based OAuth 2.0 provider for appication logic. Relies on local token storage. Primary
@@ -119,6 +118,8 @@ def create_local_google_provider(scopes: Sequence[str]):
     provider = LocalGoogleProvider(flow)
     
     return provider
+
+LOCAL_GOOGLE_PROVIDER = create_local_google_provider(SCOPES)
 
 def main():
     provider = create_local_google_provider(SCOPES)

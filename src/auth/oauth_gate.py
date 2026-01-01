@@ -31,7 +31,7 @@ def ensure_auth(
     :type scopes: Sequence[str]
     :param kwargs: Description
     """
-    principal_id = ctx.get("principal_id", "localtest")
+    principal_id = 'localtest'
     token = provider.get_access_token(principal_id, scopes)
     if token is not None:
         kwargs['token'] = token

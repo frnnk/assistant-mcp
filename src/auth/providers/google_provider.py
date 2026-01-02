@@ -113,13 +113,12 @@ class LocalGoogleProvider(OAuthProvider):
         )
 
 
-def create_local_google_provider(scopes: Sequence[str]):
-    flow = Flow.from_client_secrets_file(GOOGLE_SECRETS_PATH, scopes=scopes)
+def create_local_google_provider():
+    flow = Flow.from_client_secrets_file(GOOGLE_SECRETS_PATH, scopes=SCOPES)
     provider = LocalGoogleProvider(flow)
     
     return provider
 
-LOCAL_GOOGLE_PROVIDER = create_local_google_provider(SCOPES)
 
 def main():
     provider = create_local_google_provider(SCOPES)

@@ -6,13 +6,27 @@ from mcp.server.fastmcp import FastMCP, Context
 from mcp.server.fastmcp.exceptions import ToolError
 from mcp.types import CallToolResult, TextContent
 from mcp_tools.google.calendar import GoogleCalendarToolApp
-from auth.providers.google_provider import LOCAL_GOOGLE_PROVIDER
+from auth.providers.provider_registry import get_provider
 from utils.errors import MethodNotFoundError, OAuthRequiredError
+from starlette.requests import Request
+from starlette.responses import PlainTextResponse, RedirectResponse
 
 mcp = FastMCP(name="Assistant-MCP")
-calendar_tools = GoogleCalendarToolApp(provider=LOCAL_GOOGLE_PROVIDER)
+local_google_provider = get_provider('google-local')
+calendar_tools = GoogleCalendarToolApp(provider=local_google_provider)
 
-# Add an addition tool
+@mcp.custom_route("/auth/connect/{elicitation_id}", methods=['GET'])
+async def auth_connect(request: Request) -> PlainTextResponse:
+    elicitation_id = request.path_params['elicitation_id']
+    # get provider type from short-term elicitation memory
+    return PlainTextResponse("filler")
+
+
+@mcp.custom_route("/auth/callback", methods=['POST'])
+async def auth_callback(request: Request) -> PlainTextResponse:
+    return PlainTextResponse("filler")
+
+
 @mcp.tool()
 def add(a: int, b: int) -> int:
     """Add two numbers"""

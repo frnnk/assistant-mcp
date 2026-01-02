@@ -7,6 +7,7 @@ from mcp.server.fastmcp.exceptions import ToolError
 from mcp.types import CallToolResult, TextContent
 from mcp_tools.google.calendar import GoogleCalendarToolApp
 from auth.providers.provider_registry import get_provider
+from auth.oauth_gate import elicitation_mapping, callback_state
 from utils.errors import MethodNotFoundError, OAuthRequiredError
 from starlette.requests import Request
 from starlette.responses import PlainTextResponse, RedirectResponse
@@ -15,15 +16,33 @@ mcp = FastMCP(name="Assistant-MCP")
 local_google_provider = get_provider('google-local')
 calendar_tools = GoogleCalendarToolApp(provider=local_google_provider)
 
+
 @mcp.custom_route("/auth/connect/{elicitation_id}", methods=['GET'])
 async def auth_connect(request: Request) -> PlainTextResponse:
     elicitation_id = request.path_params['elicitation_id']
-    # get provider type from short-term elicitation memory
-    return PlainTextResponse("filler")
+    elicitation_body = elicitation_mapping[elicitation_id]
+
+    provider = get_provider(provider_name=elicitation_body['provider'])
+    provider_state = provider.generate_auth_url(
+        scopes=elicitation_body['scopes'],
+        elicitation_id=elicitation_id,
+        host='127.0.0.1',
+        port=request.url.port
+    )
+    callback_state[elicitation_id] = provider_state
+   
+    return RedirectResponse(url=provider_state['auth_url'])
 
 
-@mcp.custom_route("/auth/callback", methods=['POST'])
+@mcp.custom_route("/auth/callback/{elicitation_id}", methods=['POST'])
 async def auth_callback(request: Request) -> PlainTextResponse:
+    elicitation_id = request.path_params['elicitation_id']
+    provider_state = callback_state[elicitation_id]
+    uri = str(request.url)
+
+    provider = get_provider(provider_name=provider_state['provider'])
+    provider.finish
+
     return PlainTextResponse("filler")
 
 

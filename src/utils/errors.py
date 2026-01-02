@@ -3,10 +3,9 @@ Construction of custom errors.
 """
 
 class OAuthRequiredError(RuntimeError):
-    def __init__(self, message: str, auth_url: str):
+    def __init__(self, message: str, elicitation_id: str):
         self.message = message
-        self.auth_url = auth_url
-    pass
+        self.auth_url = elicitation_id
 
 class MethodNotFoundError(RuntimeError):
     pass

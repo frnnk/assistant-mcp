@@ -5,9 +5,15 @@ to store logic related to the OAuth gate within the auth module.
 Called within OAuthToolApp's run_method (mcp_tools.auth_tool_app)
 """
 
+import os
+import uuid
 from typing import Sequence, Dict, Any, Callable
 from auth.providers.provider import OAuthProvider
+from utils.errors import OAuthRequiredError
 
+LOCAL_OAUTH_ON = os.getenv('LOCAL_OAUTH')
+elicitation_mapping = {}
+callback_state = {}
 
 def ensure_auth(
     provider: OAuthProvider,
@@ -37,5 +43,21 @@ def ensure_auth(
         kwargs['token'] = token
         return method(ctx=ctx, **kwargs)
 
-    # otherwise start auth process and finish
-    provider.start_auth(scopes)
+    # switched to local oauth flow if needed
+    if LOCAL_OAUTH_ON == 'true':
+        provider.start_auth(scopes)
+        raise OAuthRequiredError(
+            message='Local OAuth Required', 
+            elicitation_id='n/a'
+        )
+    
+    elicitation_id = str(uuid.uuid4())
+    elicitation_mapping[elicitation_id] = {
+        'provider_name': provider.name, 
+        'scopes': scopes
+    }
+
+    raise OAuthRequiredError(
+        message='OAuth required',
+        elicitation_id=elicitation_id
+    )

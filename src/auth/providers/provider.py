@@ -4,7 +4,7 @@ and clients.
 """
 
 from abc import ABC, abstractmethod
-from typing import Optional, Sequence
+from typing import Optional, Sequence, Dict
 import wsgiref.util
 from auth.tokens.auth_token import OAuthToken
 
@@ -24,13 +24,26 @@ class OAuthProvider(ABC):
     
     def _set_token(self, token: OAuthToken) -> None:
         self.token = token
+
+    @property
+    @abstractmethod
+    def name(self):
+        pass
     
     @abstractmethod
     def _get_stored_token(self, principal_id):
         pass
 
     @abstractmethod
-    def _generate_auth_url(self):
+    def generate_auth_url(
+        self,
+        scopes: Sequence[str],
+        elicitation_id: str,  
+        host="localhost", 
+        port=8080, 
+        trailing_slash=True,
+        **auth_kwargs
+    ):
         pass
 
     @abstractmethod
@@ -38,7 +51,7 @@ class OAuthProvider(ABC):
         pass
 
     @abstractmethod
-    def start_auth(self, scopes: Sequence[str]):
+    def finish_auth(self, provider_state: Dict, uri):
         pass
 
 

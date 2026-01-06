@@ -6,7 +6,8 @@ Makes use of the Google OAuth token, found in auth.tokens.google_token
 import json
 from typing import Optional, List, Dict, Any
 from googleapiclient.errors import HttpError
-from auth.tokens.auth_token import OAuthToken
+from auth.tokens.google_token import GoogleToken
+from auth.providers.google_provider import GoogleProvider
 from utils.decorators import tool_retry_factory, tool_scope_factory
 from mcp_tools.auth_tool_app import OAuthToolApp
 from gcsa.google_calendar import GoogleCalendar
@@ -17,11 +18,14 @@ SCOPES = ["https://www.googleapis.com/auth/calendar"]
 
 
 class GoogleCalendarToolApp(OAuthToolApp):
+    def __init__(self, provider: GoogleProvider):
+        self.provider = provider
+    
     @tool_scope_factory(scopes=SCOPES)
     @tool_retry_factory(error_message="Google Calendar error (create_event)", retry_on=(HttpError,))
     def create_event(
         self, *,
-        token: OAuthToken,
+        token: GoogleToken,
         ctx: Dict[str, Any], 
         calendar_id: str,
         name: str, 
@@ -54,7 +58,7 @@ class GoogleCalendarToolApp(OAuthToolApp):
     @tool_retry_factory(error_message="Google Calendar error (update_event)", retry_on=(HttpError,))
     def update_event(
         self, *,
-        token: OAuthToken,
+        token: GoogleToken,
         ctx: Dict[str, Any], 
         calendar_id: str,
         event_id: str,
@@ -83,7 +87,7 @@ class GoogleCalendarToolApp(OAuthToolApp):
 
     @tool_scope_factory(scopes=SCOPES)
     @tool_retry_factory(error_message="Google Calendar error (list_calendars)", retry_on=(HttpError,))
-    def list_calendars(self, *, token: OAuthToken, ctx: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def list_calendars(self, *, token: GoogleToken, ctx: Dict[str, Any]) -> List[Dict[str, Any]]:
         """
         Lists calendars on the user's calendar list.
         """
@@ -107,7 +111,7 @@ class GoogleCalendarToolApp(OAuthToolApp):
     @tool_retry_factory(error_message="Google Calendar error (list_events)", retry_on=(HttpError,))
     def list_events(
         self, *, 
-        token: OAuthToken, 
+        token: GoogleToken, 
         ctx: Dict[str, Any], 
         calendar_id: str, 
         start_time: datetime,

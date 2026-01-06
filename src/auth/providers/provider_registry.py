@@ -4,7 +4,7 @@ Registry for different providers, to support dynamic retrieval of providers.
 Providers should be one-time initialized.
 """
 
-from auth.providers.google_provider import create_local_google_provider, create_google_provider
+from auth.providers.google_provider import create_google_provider
 from auth.providers.provider import OAuthProvider
 
 # LOCAL_GOOGLE_PROVIDER = create_local_google_provider()

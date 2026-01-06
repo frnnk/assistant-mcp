@@ -11,7 +11,6 @@ from typing import Sequence, Dict, Any, Callable
 from auth.providers.provider import OAuthProvider
 from utils.errors import OAuthRequiredError
 
-LOCAL_OAUTH_ON = os.getenv('LOCAL_OAUTH')
 elicitation_mapping = {}
 callback_state = {}
 
@@ -42,14 +41,6 @@ def ensure_auth(
     if token is not None:
         kwargs['token'] = token
         return method(ctx=ctx, **kwargs)
-
-    # switched to local oauth flow if needed
-    if LOCAL_OAUTH_ON == 'true':
-        provider.start_auth(scopes)
-        raise OAuthRequiredError(
-            message='Local OAuth Required', 
-            elicitation_id='n/a'
-        )
     
     elicitation_id = str(uuid.uuid4())
     elicitation_mapping[elicitation_id] = {

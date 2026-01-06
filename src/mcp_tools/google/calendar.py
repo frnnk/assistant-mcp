@@ -100,7 +100,9 @@ class GoogleCalendarToolApp(OAuthToolApp):
             calendar_dict['calender_id'] = calendar.calendar_id
             calendar_list.append(calendar_dict)
         
-        return calendar_list
+        return {
+            'calendars': calendar_list
+        }
 
 
     @tool_scope_factory(scopes=SCOPES)
@@ -133,40 +135,4 @@ class GoogleCalendarToolApp(OAuthToolApp):
 
 
 def main():
-    provider = create_local_google_provider(SCOPES)
-    cal = GoogleCalendarToolApp(provider=provider)
-    # x = cal.run_method('list_calendars', ctx={})
-    x = cal.run_method(
-        method_name='list_events',
-        ctx={},
-        calendar_id="mitzbtofficial@gmail.com",
-        start_time=datetime(2025, 8, 1),
-        duration=timedelta(days=30)
-    )
-
-    # x = cal.run_method(
-    #     method_name="create_event",
-    #     calendar_id="ffliu926@gmail.com",
-    #     ctx={},
-    #     name="testing event",
-    #     start=datetime(2026, 1, 2, hour=9),
-    #     duration=timedelta(minutes=45),
-    #     location="my house",
-    #     description="this is a testing attempt to create an event"
-    # )
-
-    # x = cal.run_method(
-    #     method_name="update_event",
-    #     calendar_id="ffliu926@gmail.com",
-    #     event_id="7h9u8otn3i8kt3kqjmm19hocho",
-    #     ctx={},
-    #     name="testing event update",
-    #     start=datetime(2026, 1, 2, hour=12),
-    #     duration=timedelta(minutes=30),
-    #     location="my room",
-    #     description="this is a testing attempt to update an event"
-    # )
-    # print(x)
-
-    print(json.dumps(x, indent=4))
     pass

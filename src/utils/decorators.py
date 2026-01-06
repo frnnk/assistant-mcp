@@ -2,12 +2,17 @@
 Construction of useful decorators and closures.
 """
 
+import os
 import time
-import asyncio
 from typing import Tuple, Type, Sequence
 from random import randint
+from functools import wraps
+from dotenv import load_dotenv
 
-# decorators
+load_dotenv()
+SERVER_HOST = os.getenv('SERVER_HOST')
+SERVER_PORT = os.getenv('SERVER_PORT')
+
 
 def tool_retry_factory(
     error_message: str, 
@@ -15,6 +20,7 @@ def tool_retry_factory(
     retries=3,
 ):
     def decorator(fn):
+        @wraps(fn)
         def wrapper(*args, **kwargs):
             for cnt in range(retries + 1):
                 try:
@@ -37,5 +43,39 @@ def tool_scope_factory(
     def decorator(fn):
         fn.__scopes__ = scopes
         return fn
+    return decorator
+
+
+def mcp_oauth_handler(message: str = "Authorization is required."):
+    """
+    Decorator that handles OAuthRequiredError and converts it to UrlElicitationRequiredError
+    for MCP tool functions. Automatically reads SERVER_HOST and SERVER_PORT from environment.
+
+    Args:
+        message: Custom message to display to the user when OAuth is required
+    """
+    from mcp.types import ElicitRequestURLParams
+    from mcp.shared.exceptions import UrlElicitationRequiredError
+    from utils.errors import OAuthRequiredError
+
+    def decorator(fn):
+        @wraps(fn)
+        def wrapper(*args, **kwargs):
+            try:
+                return fn(*args, **kwargs)
+            except OAuthRequiredError as e:
+                server_host = SERVER_HOST
+                server_port = SERVER_PORT
+                raise UrlElicitationRequiredError(
+                    elicitations=[
+                        ElicitRequestURLParams(
+                            mode='url',
+                            elicitationId=e.elicitation_id,
+                            url=f"http://{server_host}:{server_port}/auth/connect/{e.elicitation_id}",
+                            message=message
+                        )
+                    ]
+                )
+        return wrapper
     return decorator
 

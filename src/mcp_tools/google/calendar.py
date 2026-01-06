@@ -4,11 +4,9 @@ Makes use of the Google OAuth token, found in auth.tokens.google_token
 """
 
 import json
-from typing import Optional, List, Dict, Any, Iterable, Literal
-from googleapiclient.discovery import build
+from typing import Optional, List, Dict, Any
 from googleapiclient.errors import HttpError
 from auth.tokens.auth_token import OAuthToken
-from auth.providers.google_provider import create_local_google_provider
 from utils.decorators import tool_retry_factory, tool_scope_factory
 from mcp_tools.auth_tool_app import OAuthToolApp
 from gcsa.google_calendar import GoogleCalendar
@@ -131,7 +129,9 @@ class GoogleCalendarToolApp(OAuthToolApp):
             event_dict['event_id'] = event.event_id or 'n/a'
             events_list.append(event_dict)
         
-        return events_list
+        return {
+            'events': events_list
+        }
 
 
 def main():

@@ -58,6 +58,7 @@ async def auth_callback(request: Request) -> PlainTextResponse:
 def list_calendars(ctx: Context):
     """
     List all calendars in the user's Google Calendar account.
+    Returns calendar_id values needed for other calendar tools.
     """
     result = calendar_tools.run_method(
         'list_calendars',
@@ -70,17 +71,23 @@ def list_calendars(ctx: Context):
 @mcp_oauth_handler("Authorization is required to access your Google Calendar.")
 def list_events(
     ctx: Context,
-    calendar_id: str,
     start_time: str,
+    calendar_id: str = 'primary',
     duration_days: int = 7
 ):
     """
     List events from a specific calendar within a time range.
 
+    Prerequisites:
+        - calendar_id: Obtain from list_calendars first. Otherwise defaults to primary
+        calendar
+
     Args:
-        calendar_id: The calendar ID (email address)
+        calendar_id: The calendar ID from list_calendars
         start_time: Start time in ISO format (e.g., '2026-01-06T00:00:00')
         duration_days: Number of days to look ahead (default: 7)
+
+    Returns event_id values needed for update_event.
     """
     result = calendar_tools.run_method(
         'list_events',
@@ -96,21 +103,24 @@ def list_events(
 @mcp_oauth_handler("Authorization is required to access your Google Calendar.")
 def create_event(
     ctx: Context,
-    calendar_id: str,
-    name: str,
     start: str,
-    duration_minutes: int,
+    name: str = None,
+    calendar_id: str = 'primary',
+    duration_minutes: int = 30,
     location: str = None,
     description: str = None
 ):
     """
     Create a new event in a specific calendar.
 
+    Prerequisites:
+        - calendar_id: Obtain from list_calendars first. Otherwise defaults to primary calendar.
+
     Args:
-        calendar_id: The calendar ID (email address)
-        name: Event name/title
+        calendar_id: The calendar ID from list_calendars
         start: Start time in ISO format (e.g., '2026-01-06T14:00:00')
-        duration_minutes: Event duration in minutes
+        name: Event name/title (optional - agent should generate from context if not provided)
+        duration_minutes: Event duration in minutes (default: 30)
         location: Optional event location
         description: Optional event description
     """
@@ -133,21 +143,25 @@ def update_event(
     ctx: Context,
     calendar_id: str,
     event_id: str,
-    name: str,
     start: str,
-    duration_minutes: int,
+    name: str = None,
+    duration_minutes: int = 30,
     location: str = None,
     description: str = None
 ):
     """
     Update an existing event in a specific calendar.
 
+    Prerequisites:
+        - calendar_id: Obtain from list_calendars first
+        - event_id: Obtain from list_events first
+
     Args:
-        calendar_id: The calendar ID (email address)
-        event_id: The event ID to update
-        name: Updated event name/title
+        calendar_id: The calendar ID from list_calendars
+        event_id: The event ID from list_events
         start: Updated start time in ISO format (e.g., '2026-01-06T14:00:00')
-        duration_minutes: Updated event duration in minutes
+        name: Updated event name/title (optional - keeps existing if not provided)
+        duration_minutes: Updated event duration in minutes (default: 30)
         location: Updated event location
         description: Updated event description
     """

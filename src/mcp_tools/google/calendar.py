@@ -71,12 +71,14 @@ class GoogleCalendarToolApp(OAuthToolApp):
         creds = token.present_creds()
         gc = GoogleCalendar(credentials=creds, default_calendar=calendar_id)
         event = gc.get_event(event_id=event_id, calendar_id=calendar_id)
-        
-        event.summary=name
-        event.start=start
-        event.end=start + duration
-        event.location=location
-        event.description=description
+
+        # Preserve existing name if not provided
+        if name is not None:
+            event.summary = name
+        event.start = start
+        event.end = start + duration
+        event.location = location
+        event.description = description
         event = gc.update_event(event=event)
 
         return {
@@ -98,8 +100,8 @@ class GoogleCalendarToolApp(OAuthToolApp):
         for calendar in gc.get_calendar_list():
             calendar_dict = {}
             calendar_dict['name'] = calendar.summary
-            calendar_dict['desciption'] = calendar.description or 'n/a'
-            calendar_dict['calender_id'] = calendar.calendar_id
+            calendar_dict['description'] = calendar.description or 'n/a'
+            calendar_dict['calendar_id'] = calendar.calendar_id
             calendar_list.append(calendar_dict)
         
         return {
@@ -129,7 +131,7 @@ class GoogleCalendarToolApp(OAuthToolApp):
             event_dict['name'] = event.summary
             event_dict['start'] = str(event.start)
             event_dict['end'] = str(event.end)
-            event_dict['desciption'] = event.description or 'n/a'
+            event_dict['description'] = event.description or 'n/a'
             event_dict['event_id'] = event.event_id or 'n/a'
             events_list.append(event_dict)
         

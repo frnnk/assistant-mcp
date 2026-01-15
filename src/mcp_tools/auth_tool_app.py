@@ -8,7 +8,6 @@ OAuth tokens use the generic interface OAuthToken, found in auth.tokens.auth_tok
 from abc import ABC
 from typing import Sequence, Dict, Any
 from auth.providers.provider import OAuthProvider
-from auth.tokens.auth_token import OAuthToken
 from auth.oauth_gate import ensure_auth
 from utils.errors import MethodNotFoundError, ScopesNotFoundError
 

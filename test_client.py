@@ -9,6 +9,7 @@ from mcp import ClientSession
 from mcp.types import CallToolResult
 from mcp.client.streamable_http import streamable_http_client
 from mcp.shared.exceptions import UrlElicitationRequiredError, McpError
+from datetime import datetime, timezone
 
 load_dotenv()
 SERVER_PORT = os.getenv('SERVER_PORT')
@@ -23,7 +24,10 @@ async def main():
             print("Tools:", [t.name for t in tools.tools])
             import json
             try:
-                result = await session.call_tool("list_calendars", arguments={})
+                result = await session.call_tool("list_events", arguments={
+                    'calendar_id': 'primary',
+                    'start_time': datetime.now().isoformat()
+                })
                 print(result.content)
                 print(result.structuredContent)
 

@@ -1,5 +1,6 @@
 **/*.env
 **/*.txt
+claude.md
 
 # ignore pycache / other caches
 __pycache__/

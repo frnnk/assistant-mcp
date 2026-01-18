@@ -27,13 +27,13 @@ flowchart TD
     client_redirect[Client shows auth URL]
     client_redirect --> auth_connect
 
-    auth_connect[/auth/connect/{elicitation_id}]
+    auth_connect["/auth/connect/{elicitation_id}"]
     auth_connect --> google_oauth
 
     google_oauth[Google OAuth Consent]
     google_oauth --> auth_callback
 
-    auth_callback[/auth/callback/{elicitation_id}]
+    auth_callback["/auth/callback/{elicitation_id}"]
     auth_callback --> store_token
 
     store_token[Store Token to JSON]

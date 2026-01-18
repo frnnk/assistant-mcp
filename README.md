@@ -2,51 +2,7 @@
 
 An MCP (Model Context Protocol) server template that provides OAuth 2.0-protected tools to agentic clients. Built with FastMCP and currently integrates with Google APIs.
 
-## Architecture
-
-```mermaid
-flowchart TD
-    START((Client Request)) --> tool_call
-
-    tool_call[Tool Called<br/>with @mcp_oauth_handler]
-    tool_call --> run_method
-
-    run_method[OAuthToolApp.run_method]
-    run_method --> ensure_auth
-
-    ensure_auth{ensure_auth<br/>Token exists?}
-    ensure_auth -->|Yes| execute_tool
-    ensure_auth -->|No| oauth_error
-
-    oauth_error[Raise OAuthRequiredError]
-    oauth_error --> mcp_handler
-
-    mcp_handler[Convert to<br/>UrlElicitationRequiredError]
-    mcp_handler --> client_redirect
-
-    client_redirect[Client shows auth URL]
-    client_redirect --> auth_connect
-
-    auth_connect["/auth/connect/{elicitation_id}"]
-    auth_connect --> google_oauth
-
-    google_oauth[Google OAuth Consent]
-    google_oauth --> auth_callback
-
-    auth_callback["/auth/callback/{elicitation_id}"]
-    auth_callback --> store_token
-
-    store_token[Store Token to JSON]
-    store_token --> client_retry
-
-    client_retry[Client Retries Tool Call]
-    client_retry --> tool_call
-
-    execute_tool[Execute Tool<br/>with valid token]
-    execute_tool --> END((Response))
-```
-
-### Components
+## Components
 
 | Component | Location | Purpose |
 |-----------|----------|---------|
@@ -57,7 +13,7 @@ flowchart TD
 | Calendar Tools | `src/mcp_tools/google/calendar.py` | Google Calendar API wrapper |
 | Decorators | `src/utils/decorators.py` | Scopes, retry, OAuth error handling |
 
-### OAuth Flow Steps
+## OAuth Flow Steps
 
 | Step | Description |
 |------|-------------|
@@ -122,12 +78,6 @@ cd assistant-mcp
 uv sync
 ```
 
-Or with pip:
-
-```bash
-pip install -e .
-```
-
 ## Configuration
 
 Create a `.env` file with:
@@ -146,25 +96,12 @@ SERVER_PORT=8000
 | `SERVER_HOST` | Server host address (default: 127.0.0.1) |
 | `SERVER_PORT` | Server port number (default: 8000) |
 
-### Google OAuth Setup
+### Google OAuth Local Setup
 
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Create a new project or select existing
-3. Enable the Google Calendar API
-4. Go to **Credentials** → **Create Credentials** → **OAuth client ID**
-5. Select **Web application**
-6. Add authorized redirect URI: `http://127.0.0.1:8000/auth/callback/{elicitation_id}`
-   - Note: For development, use a wildcard pattern or add specific IDs as needed
-7. Download the JSON file and save to `GOOGLE_SECRETS_PATH`
+For local setup, you need to create a Google Cloud project and place a `secrets.json` file
+at the root of this repo to setup the Google OAuth Provider.
 
 ## Running
-
-```bash
-cd assistant-mcp
-python src/main.py
-```
-
-Or with uv:
 
 ```bash
 uv run python src/main.py
@@ -329,3 +266,4 @@ def method_name(self, *, token: GoogleToken, ctx: Dict, param: str):
 ## Related
 
 - **msg-agent**: Companion MCP client project that consumes these tools using LangGraph
+- **test_client**: A rough test client is provided to test the MCP server

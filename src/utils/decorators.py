@@ -8,10 +8,14 @@ from typing import Tuple, Type, Sequence
 from random import randint
 from functools import wraps
 from dotenv import load_dotenv
+from mcp.types import ElicitRequestURLParams
+from mcp.shared.exceptions import UrlElicitationRequiredError
+from utils.errors import OAuthRequiredError
 
 load_dotenv()
 SERVER_HOST = os.getenv('SERVER_HOST')
 SERVER_PORT = os.getenv('SERVER_PORT')
+SERVER_ORIGIN_PROXY = os.getenv('SERVER_ORIGIN_PROXY')
 
 
 def tool_retry_factory(
@@ -54,24 +58,19 @@ def mcp_oauth_handler(message: str = "Authorization is required."):
     Args:
         message: Custom message to display to the user when OAuth is required
     """
-    from mcp.types import ElicitRequestURLParams
-    from mcp.shared.exceptions import UrlElicitationRequiredError
-    from utils.errors import OAuthRequiredError
-
     def decorator(fn):
         @wraps(fn)
         def wrapper(*args, **kwargs):
             try:
                 return fn(*args, **kwargs)
             except OAuthRequiredError as e:
-                server_host = SERVER_HOST
-                server_port = SERVER_PORT
+                origin = SERVER_ORIGIN_PROXY if SERVER_ORIGIN_PROXY else f"{SERVER_HOST}:{SERVER_PORT}"
                 raise UrlElicitationRequiredError(
                     elicitations=[
                         ElicitRequestURLParams(
                             mode='url',
                             elicitationId=e.elicitation_id,
-                            url=f"http://{server_host}:{server_port}/auth/connect/{e.elicitation_id}",
+                            url=f"http://{origin}/auth/connect/{e.elicitation_id}",
                             message=message
                         )
                     ]

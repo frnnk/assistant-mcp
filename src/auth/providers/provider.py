@@ -39,8 +39,7 @@ class OAuthProvider(ABC):
         self,
         scopes: Sequence[str],
         elicitation_id: str,  
-        host="localhost", 
-        port=8080, 
+        proxy_origin: str,
         trailing_slash=True,
         **auth_kwargs
     ):

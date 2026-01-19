@@ -18,6 +18,7 @@ from starlette.responses import PlainTextResponse, RedirectResponse
 load_dotenv()
 SERVER_HOST = os.getenv('SERVER_HOST')
 SERVER_PORT = os.getenv('SERVER_PORT')
+SERVER_ORIGIN_PROXY = os.getenv('SERVER_ORIGIN_PROXY')
 
 mcp = FastMCP(name="Assistant-MCP", host=SERVER_HOST, port=SERVER_PORT)
 google_provider = get_provider('google')
@@ -33,8 +34,7 @@ async def auth_connect(request: Request) -> PlainTextResponse:
     provider_state = provider.generate_auth_url(
         scopes=elicitation_body['scopes'],
         elicitation_id=elicitation_id,
-        host=SERVER_HOST,
-        port=SERVER_PORT
+        proxy_origin=SERVER_ORIGIN_PROXY
     )
     callback_state[elicitation_id] = provider_state
    

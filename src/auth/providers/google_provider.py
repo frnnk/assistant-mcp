@@ -60,14 +60,13 @@ class GoogleProvider(OAuthProvider):
         self,
         scopes: Sequence[str],
         elicitation_id: str,  
-        host="localhost", 
-        port=8080, 
+        proxy_origin: str, 
         trailing_slash=True,
         **auth_kwargs
     ):
         flow = Flow.from_client_secrets_file(GOOGLE_SECRETS_PATH, scopes=scopes)
-        fmt = "http://{}:{}/auth/callback/{}/" if trailing_slash else "http://{}:{}/{}"
-        redirect_uri = fmt.format(host, port, elicitation_id)
+        fmt = "http://{}/auth/callback/{}/" if trailing_slash else "http://{}/auth/callback/{}"
+        redirect_uri = fmt.format(proxy_origin, elicitation_id)
         flow.redirect_uri = redirect_uri
         auth_url, state = flow.authorization_url(**auth_kwargs)
 

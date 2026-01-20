@@ -65,7 +65,7 @@ class GoogleProvider(OAuthProvider):
         **auth_kwargs
     ):
         flow = Flow.from_client_secrets_file(GOOGLE_SECRETS_PATH, scopes=scopes)
-        fmt = "http://{}/auth/callback/" if trailing_slash else "http://{}/auth/callback"
+        fmt = "{}/auth/callback/" if trailing_slash else "{}/auth/callback"
         redirect_uri = fmt.format(proxy_origin, elicitation_id)
         flow.redirect_uri = redirect_uri
         auth_url, state = flow.authorization_url(
@@ -93,7 +93,10 @@ class GoogleProvider(OAuthProvider):
 
         # Note: using https here because oauthlib is very picky that
         # OAuth 2.0 should only occur over https.
-        authorization_response = uri.replace("http", "https")
+        if "https" not in uri:
+            uri = uri.replace("http", "https")
+
+        authorization_response = uri
         flow.fetch_token(authorization_response=authorization_response)
         creds = flow.credentials
 

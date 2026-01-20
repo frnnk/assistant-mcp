@@ -64,13 +64,13 @@ def mcp_oauth_handler(message: str = "Authorization is required."):
             try:
                 return fn(*args, **kwargs)
             except OAuthRequiredError as e:
-                origin = SERVER_ORIGIN_PROXY if SERVER_ORIGIN_PROXY else f"{SERVER_HOST}:{SERVER_PORT}"
+                origin = SERVER_ORIGIN_PROXY if SERVER_ORIGIN_PROXY else f"http://{SERVER_HOST}:{SERVER_PORT}"
                 raise UrlElicitationRequiredError(
                     elicitations=[
                         ElicitRequestURLParams(
                             mode='url',
                             elicitationId=e.elicitation_id,
-                            url=f"http://{origin}/auth/connect/{e.elicitation_id}",
+                            url=f"{origin}/auth/connect/{e.elicitation_id}",
                             message=message
                         )
                     ]

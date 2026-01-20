@@ -54,6 +54,14 @@ class GoogleProvider(OAuthProvider):
             
                 return token
         
+        # refresh if we can
+        if token is not None and token.can_refresh:
+            token.refresh()
+            with open(GOOGLE_LOCAL_TOKEN_PATH, 'w') as new_token:
+                new_token.write(token.creds.to_json())
+        
+            return token
+        
         return None
 
     def generate_auth_url(
@@ -70,6 +78,8 @@ class GoogleProvider(OAuthProvider):
         flow.redirect_uri = redirect_uri
         auth_url, state = flow.authorization_url(
             state=elicitation_id,
+            access_type='offline',
+            prompt='consent',
             **auth_kwargs
         )
 
@@ -93,8 +103,8 @@ class GoogleProvider(OAuthProvider):
 
         # Note: using https here because oauthlib is very picky that
         # OAuth 2.0 should only occur over https.
-        if "https" not in uri:
-            uri = uri.replace("http", "https")
+        if uri[:5] != "https":
+            uri = "https" + uri[4:]
 
         authorization_response = uri
         flow.fetch_token(authorization_response=authorization_response)

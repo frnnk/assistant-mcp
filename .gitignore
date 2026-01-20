@@ -12,4 +12,5 @@ __pycache__/
 
 
 **/secrets.json
+**/secrets_web.json
 **/token.json

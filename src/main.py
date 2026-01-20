@@ -41,9 +41,9 @@ async def auth_connect(request: Request) -> PlainTextResponse:
     return RedirectResponse(url=provider_state['auth_url'])
 
 
-@mcp.custom_route("/auth/callback/{elicitation_id}", methods=['GET'])
+@mcp.custom_route("/auth/callback", methods=['GET'])
 async def auth_callback(request: Request) -> PlainTextResponse:
-    elicitation_id = request.path_params['elicitation_id']
+    elicitation_id = request.query_params.get('state')
     provider_state = callback_state[elicitation_id]
     uri = str(request.url)
 

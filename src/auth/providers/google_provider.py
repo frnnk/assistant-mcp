@@ -65,10 +65,13 @@ class GoogleProvider(OAuthProvider):
         **auth_kwargs
     ):
         flow = Flow.from_client_secrets_file(GOOGLE_SECRETS_PATH, scopes=scopes)
-        fmt = "http://{}/auth/callback/{}/" if trailing_slash else "http://{}/auth/callback/{}"
+        fmt = "http://{}/auth/callback/" if trailing_slash else "http://{}/auth/callback"
         redirect_uri = fmt.format(proxy_origin, elicitation_id)
         flow.redirect_uri = redirect_uri
-        auth_url, state = flow.authorization_url(**auth_kwargs)
+        auth_url, state = flow.authorization_url(
+            state=elicitation_id,
+            **auth_kwargs
+        )
 
         return {
             'id': elicitation_id,
